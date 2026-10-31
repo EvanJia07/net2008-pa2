@@ -54,8 +54,13 @@ def compare_versions(found, required):
 def audit_inventory(root, policy):
 
     report = { 
-        "site": root.get("site"), "total_devices": 0, "skipped_devices": 0, "roles": {}, 
-        "interfaces": {"up": 0, "down": 0, "other": 0}, "violations": [], "complaint": []
+        "site": root.get("site"), 
+        "total_devices": 0, 
+        "skipped_devices": 0, 
+        "roles": {}, 
+        "interfaces": {"up": 0, "down": 0, "other": 0}, 
+        "violations": [], 
+        "complaint": []
         }
 
     min_os = policy.get("min_os")
@@ -116,17 +121,22 @@ def audit_inventory(root, policy):
             owner = device.find("owner")
 
             if owner is None or not (owner.txt or "").strip():
-                report["violations"].append({"device": device_id, "type": "missing_owner"})
+                report["violations"].append({
+                    "device": device_id, 
+                    "type": "missing_owner"})
                 device_has_violation = True
 
         #Checks the number of down interfaces
         if max_down is not None and down_count > max_down:
-            report["Violations"].append({"device": device_id, "type": "too_many_down", "down": down_count})
+            report["Violations"].append({
+                "device": device_id, 
+                "type": "too_many_down", 
+                "down": down_count})
             device_has_violation = True
 
         #Devices without violations are compliant
         if not device_has_violation:
-            report["complaint".append(device_id)]
+            report["complaint"].append(device_id)
 
     report["complaint"].sort()
     return report
