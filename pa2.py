@@ -191,7 +191,6 @@ def write_report(report):
         print("Error: Could not write audit.json")
         sys.exit(1)
 
-
 def main():
 
     if len(sys.argv) != 3:
