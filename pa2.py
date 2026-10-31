@@ -3,13 +3,25 @@ import json
 import xml.etree.ElementTree as ET
 import yaml
 
+class InputError(Exception):
+    """Erroe when reading input files."""
+
 def read_files(xml_file, yaml_file):
     try:
         tree = ET.parse(xml_file)
         root = tree.getroot()
-    except (OSError, ET.ParseError, UnicodeDecodeError):
-        print(f"Error: Cannot read XML file: {xml_file}")
-        sys.exit(1)
+
+    except (OSError, ET.ParseError, UnicodeDecodeError) as error:
+        raise InputError(
+            f"Cannot read XML file: {xml_file}"
+        ) from error
+
+    except (OSError, yaml.YAMLError, ValueError, UnicodeDecodeError) as error:
+        raise InputError(
+            f"Cannot read YAML policy file: {yaml_file}"
+        ) from error
+        #print(f"Error: Cannot read XML file: {xml_file}")
+        #sys.exit(1)
 
     try:
         with open(yaml_file, "r", encoding = "utf-8") as file:
@@ -189,7 +201,13 @@ def main():
     xml_file = sys.argv[1]
     yaml_file = sys.argv[2]
 
-    root, policy = read_files(xml_file, yaml_file)
+
+    try:
+        root, policy = read_files(xml_file, yaml_file)
+
+    except InputError as error:
+        print(f"Error: {error}")
+        sys.exit(1)
 
     report = audit_inventory(root, policy)
 
