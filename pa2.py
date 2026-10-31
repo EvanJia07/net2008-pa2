@@ -220,5 +220,5 @@ def main():
     print("Report saved to audit.json")
 
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
