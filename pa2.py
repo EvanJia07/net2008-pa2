@@ -51,6 +51,27 @@ def compare_versions(found, required):
 
     return version_parts(found) < version_parts(required)
 
+
+class Device:
+    def __init__(self, element):
+        self.element = element
+
+    def get_id(self):
+        return self.element.get("id")
+
+    def get_role(self):
+        return self.element.get("role")
+
+    def get_os(self):
+        return self.element.get("os")
+
+    def get_owner(self):
+        return self.element.find("owner")
+
+    def count_down_interfaces(self):
+        count = 0
+
+
 def audit_inventory(root, policy):
 
     report = { 
@@ -67,17 +88,23 @@ def audit_inventory(root, policy):
     require_owner = policy.get("require_owner") is True
     max_down = policy.get("max_down_interfaces")
 
-    for device in root.findall("device"):
-        device_id = device.get("id")
+    #for device in root.findall("device"):
+    #   device_id = device.get("id")
 
         #Skip devices with no id
+
+    for element in root.findall("device"):
+        device = Device(element)
+
+        device_id = device.get_id()
+    
         if device_id is None:
             report["skipped_devices"] += 1
             continue
 
         report["total_devices"] += 1
 
-        role = device.get("role")
+        role = device.get_role()
 
         #Counts devices by role
         report["roles"][role] = report["roles"].get(role, 0) + 1
@@ -85,7 +112,7 @@ def audit_inventory(root, policy):
         device_has_violation = False
 
         #Counts interface statuses
-        down_count = 0
+        down_count = device.count_down_interfaces()
 
         for interface in device.findall("interface"):
             status = interface.get("status")
@@ -108,7 +135,7 @@ def audit_inventory(root, policy):
 
         #Checks minimum OS version
         if min_os is not None and role_allowed:
-            found = device.get("os")
+            found = device.get_os()
             required = min_os[role]
 
             if compare_versions(found, required):
@@ -118,7 +145,7 @@ def audit_inventory(root, policy):
 
         #Checks if device has owner
         if require_owner:
-            owner = device.find("owner")
+            owner = device.get_owner()
 
             if owner is None or not (owner.txt or "").strip():
                 report["violations"].append({
