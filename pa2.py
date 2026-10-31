@@ -195,7 +195,7 @@ def write_report(report):
 def main():
 
     if len(sys.argv) != 3:
-        print("usage: python pa2.py DEVICES.xml POLICY.yaml")
+        print("usage: python pa2.py devices.xml policy.yaml")
         sys.exit(2)
 
     xml_file = sys.argv[1]
