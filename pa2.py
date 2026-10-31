@@ -83,6 +83,14 @@ class Device:
     def count_down_interfaces(self):
         count = 0
 
+        for interface in self.get_interfaces():
+            if interface.get("status") == "down":
+                count += 1
+        return count
+
+    def get_interfaces(self):
+        return self.element.findall("interface")
+
 
 def audit_inventory(root, policy):
 
@@ -93,7 +101,7 @@ def audit_inventory(root, policy):
         "roles": {}, 
         "interfaces": {"up": 0, "down": 0, "other": 0}, 
         "violations": [], 
-        "complaint": []
+        "compliant": []
         }
 
     min_os = policy.get("min_os")
@@ -126,14 +134,13 @@ def audit_inventory(root, policy):
         #Counts interface statuses
         down_count = device.count_down_interfaces()
 
-        for interface in device.findall("interface"):
+        for interface in device.get_interfaces():
             status = interface.get("status")
 
             if status == "up":
                 report["interfaces"]["up"] += 1
             elif status == "down":
                 report["interfaces"]["down"] += 1
-                down_count += 1
             else:
                 report["interfaces"]["other"] += 1
 
@@ -159,7 +166,7 @@ def audit_inventory(root, policy):
         if require_owner:
             owner = device.get_owner()
 
-            if owner is None or not (owner.txt or "").strip():
+            if owner is None or not (owner.text or "").strip():
                 report["violations"].append({
                     "device": device_id, 
                     "type": "missing_owner"})
@@ -167,7 +174,7 @@ def audit_inventory(root, policy):
 
         #Checks the number of down interfaces
         if max_down is not None and down_count > max_down:
-            report["Violations"].append({
+            report["violations"].append({
                 "device": device_id, 
                 "type": "too_many_down", 
                 "down": down_count})
@@ -175,11 +182,10 @@ def audit_inventory(root, policy):
 
         #Devices without violations are compliant
         if not device_has_violation:
-            report["complaint"].append(device_id)
+            report["compliant"].append(device_id)
 
-    report["complaint"].sort()
+    report["compliant"].sort()
     return report
-
 
 
 def write_report(report):
@@ -191,10 +197,11 @@ def write_report(report):
         print("Error: Could not write audit.json")
         sys.exit(1)
 
+
 def main():
 
     if len(sys.argv) != 3:
-        print("usage: python pa2.py devices.xml policy.yaml")
+        print("usage: python pa2.py PA2_sample1.xml PA2_policy.yaml")
         sys.exit(2)
 
     xml_file = sys.argv[1]
